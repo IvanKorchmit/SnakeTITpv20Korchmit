@@ -1,16 +1,19 @@
 ﻿using System;
 using System.Threading;
+using System.Collections.Generic;
 namespace SnakeTITpv20Korchmit
 {
     class Program
     {
         public static Tile[,] tiles;
         public static Snake snake;
-        public static Snake tail;
+        public static List<Snake> tail;
+        public static int Length = 1;
         static void Main(string[] args)
         {
+            tail = new List<Snake>();
             Random rand = new Random();
-            tiles = new Tile[25, 25];
+            tiles = new Tile[40, 40];
             for (int x = 0; x < tiles.GetLength(0); x++)
             {
                 for (int y = 0; y < tiles.GetLength(1); y++)
@@ -22,20 +25,19 @@ namespace SnakeTITpv20Korchmit
                         snake.direction = Direction.LEFT;
                         tiles[y, x] = snake;
                         Program.snake = snake;
-                        tail = snake;
                     }
                 }
             }
             int x2 = rand.Next(0, tiles.GetLength(0) - 1);
             int y2 = rand.Next(0, tiles.GetLength(1) - 1);
             tiles[x2, y2] = new Food(false, 'F', x2, y2);
+
+            x2 = rand.Next(0, tiles.GetLength(0) - 1);
+            y2 = rand.Next(0, tiles.GetLength(1) - 1);
+            tiles[x2, y2] = new Food(false, 'F', x2, y2);
             while (true)
             {
                 snake.Move();
-                if(snake != tail)
-                {
-                    tail.Move();
-                }
                 if (Console.KeyAvailable)
                 {
                     ConsoleKeyInfo k = Console.ReadKey();
@@ -110,6 +112,7 @@ namespace SnakeTITpv20Korchmit
     public class Snake : Tile
     {
         public bool Head;
+        public int Age;
         public Direction direction;
         public Snake(char symbol, bool Head, int x, int y) : base(symbol, x, y)
         {
@@ -117,99 +120,93 @@ namespace SnakeTITpv20Korchmit
         }
         public void Move()
         {
-            switch (direction)
+            if (Head)
             {
-                case Direction.UP:
-                    if (Program.tiles[x - 1, y] is Food)
-                    {
-                        Grow();
-                    }
-                        if (!Head)
+                switch (direction)
+                {
+                    case Direction.UP:
+                        Snake newSnake = new Snake(symbol, Head, x, y);
+                        Program.tiles[x, y] = newSnake;
+                        x = (x - 1 + Program.tiles.GetLength(0)) % Program.tiles.GetLength(0);
+                        if (Program.tiles[x,y] is Food)
                         {
-                            direction = 
+                            Grow();
                         }
-                    Program.tiles[x - 1, y] = this;
-                    Program.tiles[x, y].prevDirection = direction;
-                    Program.tiles[x, y] = Program.tiles[x, y].Empty;
-                    x--;
-                    break;
-                case Direction.RIGHT:
-                    if (Program.tiles[x, y + 1] is Food)
-                    {
-                        Grow();
-                    }
-                    else if (Program.tiles[x, y + 1] is Snake s)
-                    {
-                        if (!Head)
+                        Program.tail.Add(newSnake);
+                        Program.tiles[x, y] = this;
+                        if(Program.tail.Count > Program.Length)
                         {
-                            direction = s.direction;
+                            Shorten();
+
                         }
-                    }
-                    Program.tiles[x, y + 1] = this;
-                    Program.tiles[x, y].prevDirection = direction;
-                    Program.tiles[x, y] = Program.tiles[x, y].Empty;
-                    y++;
-                    break;
-                case Direction.LEFT:
-                    if (Program.tiles[x, y - 1] is Food)
-                    {
-                        Grow();
-                    }
-                    else if (Program.tiles[x, y - 1] is Snake s)
-                    {
-                        if (!Head)
+                        break;
+                    case Direction.RIGHT:
+                        Snake newSnake2 = new Snake(symbol, Head, x, y);
+                        Program.tiles[x, y] = newSnake2;
+                        y++;
+                        y = (y + 1 + Program.tiles.GetLength(1)) % Program.tiles.GetLength(1);
+                        if (Program.tiles[x, y] is Food)
                         {
-                            direction = s.direction;
+                            Grow();
                         }
-                    }
-                    Program.tiles[x, y - 1] = this;
-                    Program.tiles[x, y].prevDirection = direction;
-                    Program.tiles[x, y] = Program.tiles[x, y].Empty;
-                    y--;
-                    break;
-                case Direction.DOWN:
-                    if (Program.tiles[x + 1, y] is Food)
-                    {
-                        Grow();
-                    }
-                    else if (Program.tiles[x + 1, y] is Snake s)
-                    {
-                        if (!Head)
+                        Program.tail.Add(newSnake2);
+                        Program.tiles[x, y] = this;
+                        if (Program.tail.Count > Program.Length)
                         {
-                            direction = s.direction;
+                            Shorten();
+
+
                         }
-                    }
-                    Program.tiles[x + 1, y] = this;
-                    Program.tiles[x, y] = Program.tiles[x, y].Empty;
-                    Program.tiles[x, y].prevDirection = direction;
-                    x++;
-                    break;
+                        break;
+                    case Direction.LEFT:
+                        Snake newSnake3 = new Snake(symbol, Head, x, y);
+                        Program.tiles[x, y] = newSnake3;
+                        y = (y - 1 + Program.tiles.GetLength(1)) % Program.tiles.GetLength(1);
+                        y = y % Program.tiles.GetLength(1);
+                        if (Program.tiles[x, y] is Food)
+                        {
+                            Grow();
+                        }
+                        Program.tail.Add(newSnake3);
+                        Program.tiles[x, y] = this;
+                        if (Program.tail.Count > Program.Length)
+                        {
+                            Shorten();
+
+
+                        }
+                        break;
+                    case Direction.DOWN:
+                        Snake newSnake4 = new Snake(symbol, Head, x, y);
+                        Program.tiles[x, y] = newSnake4;
+                        x = (x + 1 + Program.tiles.GetLength(0)) % Program.tiles.GetLength(0);
+                        if (Program.tiles[x, y] is Food)
+                        {
+                            Grow();
+                        }
+                        Program.tail.Add(newSnake4);
+                        Program.tiles[x, y] = this;
+                        if (Program.tail.Count > Program.Length)
+                        {
+                            Shorten();
+
+                        }
+                        break;
+                    default:
+                        break;
+                }
             }
         }
         public void Grow()
         {
-            switch (Program.tail.direction)
-            {
-                case Direction.UP:
-                    Program.tail = new Snake('X', false, x + 1, y);
-                    Program.tiles[x + 1, y] = Program.tail;
-                    break;
-                case Direction.RIGHT:
-                    Program.tail = new Snake('X', false, x, y - 1);
-                    Program.tiles[x, y - 1] = Program.tail;
-                    break;
-                case Direction.LEFT:
-                    Program.tail = new Snake('X', false, x, y + 1);
-                    Program.tiles[x, y + 1] = Program.tail;
-                    break;
-                case Direction.DOWN:
-                    Program.tail = new Snake('X', false, x - 1, y);
-                    Program.tiles[x - 1, y] = Program.tail;
-                    break;
-                default:
-                    break;
-            }
-            Program.tail.direction = Program.snake.direction;
+            Console.Beep();
+            Program.Length++;
+        }
+        private void Shorten()
+        {
+            Program.tiles[Program.tail[0].x, Program.tail[0].y] =
+                                            Program.tiles[Program.tail[0].x, Program.tail[0].y].Empty;
+            Program.tail.RemoveAt(0);
         }
     }
     public class Food : Tile
